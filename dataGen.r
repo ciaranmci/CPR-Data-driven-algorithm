@@ -81,7 +81,10 @@ if (simMissing == TRUE)
 
 # Simulate progression/recurrence.
 df$progRecur <- as.logical(rbinom(nrow(df), 1, 0.1))
+# Define data type of timestamp column.
 class(df$ts) <- 'Date'
+# Add a unique row identifier.
+df$rowID <- c(1:nrow(df))
 
 return(df)
 }
