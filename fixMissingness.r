@@ -2,8 +2,8 @@
 # the approach outlined in the publication.
 #
 # Any missing values for categorical variables are imputed with an
-# 'Unknown' category and continuous variables are imputed with a
-# meaningful default or zero.
+# 'Unknown' category, continuous variables are imputed with a
+# meaningful default or zero, time variables are not imputed.
 #
 # The fixMissing() function takes the following arguments:
 #   dataset = the dataset to be imputed.
@@ -27,7 +27,7 @@
 fixMissing <- function(dataset, colIdx_cat, colIdx_cont, contImp_list)
 {
 # Set up.
-list_of_packages <- c("tidyverse")
+list_of_packages <- c("radiant.data")
 new_packages <- list_of_packages[!(list_of_packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) install.packages(new_packages)
 for (i in 1:length(list_of_packages))
@@ -35,11 +35,21 @@ for (i in 1:length(list_of_packages))
   require(list_of_packages[i],character.only = T)
 }
 
-
-# Impute categorical variables.
-idx_col_isfactor <- which(lapply(d[,!(names(d) %in% c("rowID","worsen"))],is.factor)==T)
-d_temp <- d[,idx_col_isfactor]
-d_temp <- as.data.frame(lapply(d_temp, function(x) {refactor(addNA(x), levs = levels(x), repl = "Unknown")}))
+# Identify the categorical predictors.
+idx_col_isCat <- which(
+                      lapply(
+                            dataset[,!(names(dataset) %in% c("rowID", "PatientID","ts", "progRecur"))],
+                            is.factor
+                             )==T
+                       )
+# Impute categorical variables with 'Unknown'.
+d_temp <- dataset[,idx_col_isCat]
+d_temp <- as.data.frame(
+                        lapply(
+                              d_temp,
+                              function(x) {refactor(addNA(x), levs = levels(x), repl = "Unknown")}
+                               )
+                        )
 d[,idx_col_isfactor] <- d_temp
 # Impute numeric variables.
 # For the fake dataset, I will impute with zero.
