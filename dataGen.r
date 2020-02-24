@@ -57,15 +57,19 @@ df$ts <- ts
 # Generate data for all required continuous variables.
 contVars <-  data.frame(replicate(nCont, expr = rnorm(nrow(df), 10, 4)))
 names(contVars) <- c(paste("contVar", 1:nCont, sep = "."))
+contNames <- names(contVars)
 
 # Generate data for all required categorical variables.
 catVars <- data.frame(replicate(nCat, expr = factor(rpois(nrow(df), sample(1:4, 1)))))
 names(catVars) <- c(paste("catVar", 1:nCat, sep = "."))
+catNames <- names(catVars)
 
 # Bind variables to main dataframe.
 df <- cbind(df, contVars, catVars)
-
+allNames <- names(df)
 # Simulate missingness.
+catIdx <- which((names(df) %in% catNames)) # Get column indices of categorical variables.
+contIdx <- which((names(df) %in% contNames)) # Get column indices of continuous variables.
 if (simMissing == TRUE)
 {
   df <- cbind(rn = 1:nrow(df), df)
@@ -78,6 +82,22 @@ if (simMissing == TRUE)
     spread(var, value)        # reshape back to original format
   df <- select(df, -rn)
 }
+# *****************************************
+# I'm trying to redefine the data types so that categorical varaiables
+# go back to being factors and continuous go back to being numeric.
+d_temp <- dataset[,catIdx]
+d_temp <- as.data.frame(
+                        lapply(
+                              d_temp,
+                              function(x) {as.factor(x)}
+                               )
+                        )
+d[,idx_col_isfactor] <- d_temp
+df_temp <- data.frame(
+                     lapply(df[,catIdx], function(x) as.factor)
+                      )
+
+# *****************************************
 
 # Simulate progression/recurrence.
 df$progRecur <- as.logical(rbinom(nrow(df), 1, 0.1))
